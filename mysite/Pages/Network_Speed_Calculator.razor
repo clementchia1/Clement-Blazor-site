@@ -1,0 +1,104 @@
+﻿@page "/Network_Speed_Calculator"
+
+    <h1>Network Speed Calculator</h1>
+
+<p>What is the file size?:  <input @bind="file_size" />@file_notice</p>
+<p>What is the network speed(/s)?:  <input @bind="network_speed" />@network_notice</p>
+
+<p>@result</p>
+
+<button class="btn btn-primary" @onclick="calculate">Click me</button>
+
+@code {
+
+    private int currentCount = 0;
+    private string file_size;
+    string network_speed;
+    ulong file_bit;
+    ulong net_bit;
+    string result;
+    string file_notice;
+    string network_notice;
+
+    private void calculate()
+    {
+        file_notice = "";
+        network_notice = "";
+        if (Regex.IsMatch(file_size, @"[bB]") != true)
+        {
+            file_notice = "	Please enter the unit[K/M/G/T+B/b]";
+        }
+
+        file_bit = Ext_string_to_int(file_size);
+
+
+        net_bit = Ext_string_to_int(network_speed);
+        if (Regex.IsMatch(network_speed, @"[bB]") != true)
+        {
+            network_notice = "	Please enter the unit[K/M/G/T+B/b]";
+        }
+        if (Regex.IsMatch(network_speed, @"[bB]") == true && Regex.IsMatch(file_size, @"[bB]") == true) {
+            net_bit = unit_convert(net_bit, network_speed);
+            file_bit = unit_convert(file_bit, file_size);
+            double seconds = file_bit / net_bit;
+            if (seconds < 60)
+            {
+                result = "Result:" + seconds + "s";
+            }
+            else
+            {
+                result = "Result:" + ConvertSecondsToDate(seconds.ToString());
+            }
+        }
+
+    }
+    static ulong Ext_string_to_int(string source)
+    {
+        string b = string.Empty;
+        ulong val;
+        b = Regex.Replace(source, "[^0-9]+", string.Empty);
+        if (b.Length > 0)
+        {
+            val = ulong.Parse(b);
+            return val;
+        }
+        else
+            return 0;
+    }
+
+    static ulong unit_convert(ulong bit, string speed)
+    {
+        if (speed.Contains('K') || speed.Contains('k')) { bit = (ulong)(bit * Math.Pow(2, 10)); }
+        else if (speed.Contains('M') || speed.Contains('m')) { bit = (ulong)(bit * Math.Pow(2, 20)); }
+        else if (speed.Contains('G') || speed.Contains('g')) { bit = (ulong)(bit * Math.Pow(2, 30)); }
+        else if (speed.Contains('T') || speed.Contains('t')) { bit = (ulong)(bit * Math.Pow(2, 40)); }
+
+
+
+        if (speed.Contains('B'))
+        {
+            bit = bit * 8;
+        }
+        return bit;
+    }
+
+    static string ConvertSecondsToDate(string seconds)
+    {
+        TimeSpan t = TimeSpan.FromSeconds(Convert.ToDouble(seconds));
+
+        if (t.Days > 0)
+            return t.ToString(@"d\d\,\ h\h");
+        else if (t.Hours>0)
+        {
+            return t.ToString(@"h\h\,\ m\m");
+        }
+        else if (t.Minutes>0)
+        {
+            return t.ToString(@"m\m\,\ s\s");
+        }
+        else
+        {
+            return t.ToString(@"\s\s");
+        }
+    }
+}
